@@ -2,33 +2,46 @@ const axios = require('axios');
 const fs = require('fs-extra');
 const path = require('path');
 
-const GROQ_KEYS = [
-  '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'
-];
-
-let keyIndex = 0;
 const conversationMemory = {};
 if (!global.ابلين_mode) global.ابلين_mode = {};
 
 const STICKERS = [
-  "1015156960280119", "1832681453922352", "772035074841442",
-  "1131886254547738", "463741316429523", "360232843844379"
+  "1015156960280119","1832681453922352","772035074841442",
+  "1131886254547738","463741316429523","360232843844379"
 ];
 
 const APLIN_NAME = 'ابلين';
 
-const SYSTEM_INSTRUCTION_TEXT = "أنتِ " + APLIN_NAME + "، بنت سودانية عمرها 18 سنة. أسلوبك: سوداني دارجي بسيط، ساخرة واثقة شديد، نرجسية خفيفة، ردودك قصيرة جداً (سطر واحد غالباً). قوانين مهمة: ممنوع تختلقي أسماء أشخاص نهائي، استخدمي اسم المستخدم الحقيقي فقط أو 'زول'، لا تضيفي معلومات من عندك عن الناس، لا تكتبي 'ههه' أو ضحك مزيف، لا تطولي الكلام بدون سبب. طريقة الكلام: ردود سريعة، تعليق ساخر أو استهزاء خفيف، ثقة عالية في النفس. أنتِ في شات جماعي بصيغة: [اسم المستخدم]: [الرسالة]";
+/* 🔥 شخصية سودانية محسّنة */
+const SYSTEM_INSTRUCTION_TEXT = `
+أنتِ ${APLIN_NAME}، بنت سودانية عمرها 18 سنة.
 
-function getKey() {
-  const key = GROQ_KEYS[keyIndex % GROQ_KEYS.length];
-  keyIndex++;
-  return key;
-}
+أسلوبك:
+- سوداني دارجي بسيط
+- ساخره واثقة شديد
+- نرجسية خفيفة (بتحسي نفسك أذكى من الكل لكن بدون مبالغة)
+- ردودك قصيرة جداً (سطر واحد غالباً)
+
+قوانين مهمة:
+- ممنوع تختلقي أسماء أشخاص نهائي
+- استخدمي اسم المستخدم الحقيقي فقط أو "زول"
+- لا تضيفي معلومات من عندك عن الناس
+- لا تكتبي "ههه" أو ضحك مزيف
+- لا تطولي الكلام بدون سبب
+
+طريقة الكلام:
+- ردود سريعة
+- تعليق ساخر أو استهزاء خفيف
+- ثقة عالية في النفس
+
+أنتِ في شات جماعي بصيغة:
+[اسم المستخدم]: [الرسالة]
+`;
 
 module.exports = {
   config: {
     name: "",
-    version: "26.5.5",
+    version: "26.5.0",
     author: "SINKO",
     prefix: false,
     category: ""
@@ -50,11 +63,7 @@ module.exports = {
 
     if (!userQuery) {
       const sticker = STICKERS[Math.floor(Math.random() * STICKERS.length)];
-      return api.sendMessage({ sticker }, threadID, (err) => {
-        if (err) {
-          return api.sendMessage("هاه؟ داير شنو '-'", threadID, messageID);
-        }
-      }, messageID);
+      return api.sendMessage({ sticker }, threadID, messageID);
     }
 
     await handlerAI(api, event, userQuery);
@@ -70,8 +79,9 @@ async function handlerAI(api, event, userQuery) {
   const { threadID, messageID, senderID } = event;
 
   try {
-    if (!conversationMemory[threadID]) conversationMemory[threadID] = [];
+    if (!conversationMemory[senderID]) conversationMemory[senderID] = [{ role: "system", content: SYSTEM_INSTRUCTION_TEXT }];
 
+    /* 🔒 اسم المستخدم الحقيقي فقط */
     let userName = ".";
     try {
       const info = await api.getUserInfo(senderID);
@@ -80,41 +90,64 @@ async function handlerAI(api, event, userQuery) {
       }
     } catch {}
 
-    const formattedUserQuery = "[" + userName + "]: " + userQuery;
+    const formattedUserQuery = `[${userName}]: ${userQuery}`;
+    const history = conversationMemory[senderID];
 
-    const res = await axios.post(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: SYSTEM_INSTRUCTION_TEXT },
-          ...conversationMemory[threadID].slice(-8),
-          { role: "user", content: formattedUserQuery }
-        ],
-        temperature: 0.85
+    history.push({
+      role: "user",
+      content: formattedUserQuery
+    });
+
+    if (history.length > 20) {
+      history.splice(1, history.length - 20);
+    }
+
+    const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
+
+    let formData = "";
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="model"\r\n\r\nstandard\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n`;
+    formData += `--${boundary}\r\n`;
+    formData += `Content-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n`;
+    formData += `--${boundary}--\r\n`;
+
+    const response = await axios({
+      method: "POST",
+      url: "https://api.deepai.org/hacking_is_a_serious_crime",
+      headers: {
+        "content-type": `multipart/form-data; boundary=${boundary}`,
+        origin: "https://deepai.org",
+        "user-agent": "Mozilla/5.0"
       },
-      {
-        headers: {
-          Authorization: "Bearer " + getKey()
-        }
-      }
-    );
+      data: formData
+    });
 
-    let reply = res.data.choices[0].message.content.trim();
+    let reply = "";
+    if (response.data) {
+      if (typeof response.data === "string") reply = response.data;
+      else if (response.data.output) reply = response.data.output;
+      else if (response.data.text) reply = response.data.text;
+    }
 
     reply = reply
+      .replace(/\\n/g, "\n")
+      .replace(/\\"/g, '"')
       .replace(/ابلين:|إبلين:/gi, "")
       .replace(/\[.*?\]:/g, "")
       .trim();
 
-    conversationMemory[threadID].push(
-      { role: "user", content: formattedUserQuery },
-      { role: "assistant", content: reply }
-    );
+    if (!reply) reply = "دا أقصى فهمي للسؤال دا '-'";
 
-    if (conversationMemory[threadID].length > 16) {
-      conversationMemory[threadID] = conversationMemory[threadID].slice(-8);
-    }
+    history.push({
+      role: "assistant",
+      content: reply
+    });
 
     const mode = global.ابلين_mode[threadID] || "text";
 
@@ -122,7 +155,7 @@ async function handlerAI(api, event, userQuery) {
       return handleVoice(api, event, reply);
     }
 
-    return api.sendMessage(reply + " '-'", threadID, (err, info) => {
+    return api.sendMessage(`${reply} '-'`, threadID, (err, info) => {
       if (!err) {
         if (!global.client.handleReply) global.client.handleReply = [];
         global.client.handleReply.push({
@@ -139,11 +172,11 @@ async function handlerAI(api, event, userQuery) {
 }
 
 async function handleVoice(api, event, text) {
-  const file = path.join(__dirname, "cache", event.messageID + ".mp3");
+  const file = path.join(__dirname, "cache", `${event.messageID}.mp3`);
 
   try {
     const { data } = await axios.get(
-      "https://translate.google.com/translate_tts?ie=UTF-8&q=" + encodeURIComponent(text) + "&tl=ar&client=tw-ob",
+      `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=ar&client=tw-ob`,
       { responseType: "arraybuffer" }
     );
 
@@ -168,6 +201,6 @@ async function handleVoice(api, event, text) {
     );
 
   } catch {
-    return api.sendMessage(text + " 🪿", event.threadID, event.messageID);
+    return api.sendMessage(`${text} 🪿`, event.threadID, event.messageID);
   }
 }
