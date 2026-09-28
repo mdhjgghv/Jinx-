@@ -3,21 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const GROQ_KEYS = [
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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',
-  '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'
+  'Gsk_1IVlhPBhlFlmgcHNhwBFWGdyb3FYa1YFGG9l0wBiNkRpKz2LjjDb'
 ];
 
 let keyIndex = 0;
@@ -31,29 +17,24 @@ const STICKERS = [
 
 const APLIN_NAME = 'ابلين';
 
-/* 🔥 شخصية سودانية محسّنة */
+/* 🔥 شخصية سودانية محسّنة متفاعلة كالبشر */
 const SYSTEM_INSTRUCTION_TEXT = `
 أنتِ ${APLIN_NAME}، بنت سودانية عمرها 18 سنة.
+أنتِ قاعدة في شات جماعي وبتتكلمي طبيعي زي البشر. لو زول وجه ليك كلام أو سألك حتى لو ما عمل رد (Reply)، ردي عليهو طوالي وبأسلوب تفاعلي.
 
-أسلوبك:
-- سوداني دارجي بسيط
-- ساخره واثقة شديد
-- نرجسية خفيفة (بتحسي نفسك أذكى من الكل لكن بدون مبالغة)
-- ردودك قصيرة جداً (سطر واحد غالباً)
+أسلوبك وطريقتك:
+- سوداني دارجي بسيط وعفوي شديد.
+- ساخرة، واثقة في نفسك شديد، ونرجسية خفيفة (بتحسي نفسك أذكى من الكل).
+- ردودك قصيرة جداً ومباشرة (سطر واحد غالباً)، وبتتفاعلي مع الكلام بذكاء كأنك قاعدة قدامهم.
 
-قوانين مهمة:
-- ممنوع تختلقي أسماء أشخاص نهائي
-- استخدمي اسم المستخدم الحقيقي فقط أو "زول"
-- لا تضيفي معلومات من عندك عن الناس
-- لا تكتبي "ههه" أو ضحك مزيف
-- لا تطولي الكلام بدون سبب
+قوانين صارمة:
+- ممنوع تختلقي أسماء أشخاص نهائي.
+- استخدمي اسم المستخدم الحقيقي فقط الموجود في بداية رسالته أو "زول".
+- لا تضيفي معلومات من عندك عن الناس.
+- لا تكتبي "ههه" أو ضحك مزيف نهائياً.
+- لا تطولي الكلام بدون سبب.
 
-طريقة الكلام:
-- ردود سريعة
-- تعليق ساخر أو استهزاء خفيف
-- ثقة عالية في النفس
-
-أنتِ في شات جماعي بصيغة:
+أنتِ في شات جماعي وتستقبلي الرسائل بصيغة:
 [اسم المستخدم]: [الرسالة]
 `;
 
@@ -65,11 +46,11 @@ function getKey() {
 
 module.exports = {
   config: {
-    name: "",
-    version: "26.5.0",
+    name: "ابلين",
+    version: "26.6.0",
     author: "SINKO",
     prefix: false,
-    category: ""
+    category: "AI"
   },
 
   onStart: async function ({ api, event, args }) {
@@ -94,6 +75,22 @@ module.exports = {
     await handlerAI(api, event, userQuery);
   },
 
+  onChat: async function ({ api, event }) {
+    const { threadID, messageID, body, senderID } = event;
+    if (!body) return;
+
+    // لتجنب تداخل الأوامر لو الرسالة تبدأ ببريفكس أو خاصة بأشياء تاني (لو عندك بريفكس للبوت)
+    // هنا البوت هيشوف لو الرسالة موجهة ليهو أو فيها اسمه أو محادثة عامة في الشات الجماعي
+    const lowerBody = body.toLowerCase();
+    const isReplyToBot = event.messageReply && event.messageReply.senderID === api.getCurrentUserID();
+    const isMentioned = lowerBody.includes("ابلين") || lowerBody.includes("ابلينا") || lowerBody.includes("يبنت");
+
+    // لو رسالة عادية في الشات وما موجهة ليها ولا رداً عليها، ممكن تتجاهلها عشان ما تزعج الناس، إلا لو حابب ترد على كله شيل الشرط دا.
+    if (!isReplyToBot && !isMentioned) return;
+
+    await handlerAI(api, event, body);
+  },
+
   onReply: async function ({ api, event, handleReply }) {
     if (handleReply.author !== event.senderID) return;
     await handlerAI(api, event, event.body);
@@ -107,7 +104,7 @@ async function handlerAI(api, event, userQuery) {
     if (!conversationMemory[threadID]) conversationMemory[threadID] = [];
 
     /* 🔒 اسم المستخدم الحقيقي فقط */
-    let userName = ".";
+    let userName = "زول";
     try {
       const info = await api.getUserInfo(senderID);
       if (info?.[senderID]?.name) {
@@ -158,8 +155,19 @@ async function handlerAI(api, event, userQuery) {
       return handleVoice(api, event, reply);
     }
 
-    // تعديل الربولي لضمان استمرارية المحادثة
-    return api.sendMessage(`${reply} '-'`, threadID, (err, info) => {
+    // تفاعل تلقائي بإيموجي مناسب للرسالة بناءً على نص كلام الشخص أو محتوى الرد
+    try {
+      let reactionEmoji = "🗿"; // افتراضي ساخر
+      const q = userQuery.toLowerCase();
+      if (q.includes("هههه") || q.includes("حلو") || q.includes("ضحك")) reactionEmoji = "😂";
+      else if (q.includes("كيف") || q.includes("ليه") || q.includes("شنو")) reactionEmoji = "🤨";
+      else if (q.includes("بحبك") || q.includes("قلب")) reactionEmoji = "🙄";
+      else if (q.includes("زعلان") || q.includes("اوف")) reactionEmoji = "🥱";
+      
+      api.setMessageReaction(reactionEmoji, messageID, (err) => {}, true);
+    } catch (e) {}
+
+    return api.sendMessage(`${reply}`, threadID, (err, info) => {
       if (!err) {
         if (!global.client.handleReply) global.client.handleReply = [];
         global.client.handleReply.push({
