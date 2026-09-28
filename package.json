@@ -22,7 +22,6 @@
     "aplin"
   ],
   "dependencies": {
-    "@google/genai": "^latest",
     "@google/generative-ai": "^0.1.0",
     "ali-oss": "^6.16.0",
     "axios": "^1.6.0",
