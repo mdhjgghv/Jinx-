@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const GROQ_KEYS = [
-  'Gsk_1IVlhPBhlFlmgcHNhwBFWGdyb3FYa1YFGG9l0wBiNkRpKz2LjjDb'
+  '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'
 ];
 
 let keyIndex = 0;
@@ -28,7 +28,7 @@ function getKey() {
 module.exports = {
   config: {
     name: "",
-    version: "26.5.2",
+    version: "26.5.5",
     author: "SINKO",
     prefix: false,
     category: ""
