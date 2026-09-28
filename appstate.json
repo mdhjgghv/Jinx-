@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const GROQ_KEYS = [
-  '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'
+  'Gsk_1IVlhPBhlFlmgcHNhwBFWGdyb3FYa1YFGG9l0wBiNkRpKz2LjjDb'
 ];
 
 let keyIndex = 0;
@@ -11,37 +11,13 @@ const conversationMemory = {};
 if (!global.ابلين_mode) global.ابلين_mode = {};
 
 const STICKERS = [
-  "1015156960280119","1832681453922352","772035074841442",
-  "1131886254547738","463741316429523","360232843844379"
+  "1015156960280119", "1832681453922352", "772035074841442",
+  "1131886254547738", "463741316429523", "360232843844379"
 ];
 
 const APLIN_NAME = 'ابلين';
 
-/* 🔥 شخصية سودانية محسّنة */
-const SYSTEM_INSTRUCTION_TEXT = `
-أنتِ ${APLIN_NAME}، بنت سودانية عمرها 18 سنة.
-
-أسلوبك:
-- سوداني دارجي بسيط
-- ساخره واثقة شديد
-- نرجسية خفيفة (بتحسي نفسك أذكى من الكل لكن بدون مبالغة)
-- ردودك قصيرة جداً (سطر واحد غالباً)
-
-قوانين مهمة:
-- ممنوع تختلقي أسماء أشخاص نهائي
-- استخدمي اسم المستخدم الحقيقي فقط أو "زول"
-- لا تضيفي معلومات من عندك عن الناس
-- لا تكتبي "ههه" أو ضحك مزيف
-- لا تطولي الكلام بدون سبب
-
-طريقة الكلام:
-- ردود سريعة
-- تعليق ساخر أو استهزاء خفيف
-- ثقة عالية في النفس
-
-أنتِ في شات جماعي بصيغة:
-[اسم المستخدم]: [الرسالة]
-`;
+const SYSTEM_INSTRUCTION_TEXT = "أنتِ " + APLIN_NAME + "، بنت سودانية عمرها 18 سنة. أسلوبك: سوداني دارجي بسيط، ساخرة واثقة شديد، نرجسية خفيفة، ردودك قصيرة جداً (سطر واحد غالباً). قوانين مهمة: ممنوع تختلقي أسماء أشخاص نهائي، استخدمي اسم المستخدم الحقيقي فقط أو 'زول'، لا تضيفي معلومات من عندك عن الناس، لا تكتبي 'ههه' أو ضحك مزيف، لا تطولي الكلام بدون سبب. طريقة الكلام: ردود سريعة، تعليق ساخر أو استهزاء خفيف، ثقة عالية في النفس. أنتِ في شات جماعي بصيغة: [اسم المستخدم]: [الرسالة]";
 
 function getKey() {
   const key = GROQ_KEYS[keyIndex % GROQ_KEYS.length];
@@ -52,7 +28,7 @@ function getKey() {
 module.exports = {
   config: {
     name: "",
-    version: "26.5.0",
+    version: "26.5.2",
     author: "SINKO",
     prefix: false,
     category: ""
@@ -96,7 +72,6 @@ async function handlerAI(api, event, userQuery) {
   try {
     if (!conversationMemory[threadID]) conversationMemory[threadID] = [];
 
-    /* 🔒 اسم المستخدم الحقيقي فقط */
     let userName = ".";
     try {
       const info = await api.getUserInfo(senderID);
@@ -105,7 +80,7 @@ async function handlerAI(api, event, userQuery) {
       }
     } catch {}
 
-    const formattedUserQuery = `[${userName}]: ${userQuery}`;
+    const formattedUserQuery = "[" + userName + "]: " + userQuery;
 
     const res = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -120,14 +95,13 @@ async function handlerAI(api, event, userQuery) {
       },
       {
         headers: {
-          Authorization: `Bearer ${getKey()}`
+          Authorization: "Bearer " + getKey()
         }
       }
     );
 
     let reply = res.data.choices[0].message.content.trim();
 
-    /* 🔥 منع ظهور اسم البوت أو اختراعات */
     reply = reply
       .replace(/ابلين:|إبلين:/gi, "")
       .replace(/\[.*?\]:/g, "")
@@ -148,8 +122,7 @@ async function handlerAI(api, event, userQuery) {
       return handleVoice(api, event, reply);
     }
 
-    // تعديل الربولي لضمان استمرارية المحادثة
-    return api.sendMessage(`${reply} '-'`, threadID, (err, info) => {
+    return api.sendMessage(reply + " '-'", threadID, (err, info) => {
       if (!err) {
         if (!global.client.handleReply) global.client.handleReply = [];
         global.client.handleReply.push({
@@ -166,11 +139,11 @@ async function handlerAI(api, event, userQuery) {
 }
 
 async function handleVoice(api, event, text) {
-  const file = path.join(__dirname, "cache", `${event.messageID}.mp3`);
+  const file = path.join(__dirname, "cache", event.messageID + ".mp3");
 
   try {
     const { data } = await axios.get(
-      `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=ar&client=tw-ob`,
+      "https://translate.google.com/translate_tts?ie=UTF-8&q=" + encodeURIComponent(text) + "&tl=ar&client=tw-ob",
       { responseType: "arraybuffer" }
     );
 
@@ -195,6 +168,6 @@ async function handleVoice(api, event, text) {
     );
 
   } catch {
-    return api.sendMessage(`${text} 🪿`, event.threadID, event.messageID);
+    return api.sendMessage(text + " 🪿", event.threadID, event.messageID);
   }
 }
