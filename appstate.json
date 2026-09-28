@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const GROQ_KEYS = [
-  'Gsk_1IVlhPBhlFlmgcHNhwBFWGdyb3FYa1YFGG9l0wBiNkRpKz2LjjDb'
+  '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'
 ];
 
 let keyIndex = 0;
@@ -74,7 +74,11 @@ module.exports = {
 
     if (!userQuery) {
       const sticker = STICKERS[Math.floor(Math.random() * STICKERS.length)];
-      return api.sendMessage({ sticker }, threadID, messageID);
+      return api.sendMessage({ sticker }, threadID, (err) => {
+        if (err) {
+          return api.sendMessage("هاه؟ داير شنو '-'", threadID, messageID);
+        }
+      }, messageID);
     }
 
     await handlerAI(api, event, userQuery);
