@@ -1,173 +1,119 @@
-const axios = require('axios');
-const fs = require('fs-extra');
-const path = require('path');
-
-const GROQ_KEYS = [
-  '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'
-];
-
-let keyIndex = 0;
-const conversationMemory = {};
-if (!global.ابلين_mode) global.ابلين_mode = {};
-
-const STICKERS = [
-  "1015156960280119", "1832681453922352", "772035074841442",
-  "1131886254547738", "463741316429523", "360232843844379"
-];
-
-const APLIN_NAME = 'ابلين';
-
-const SYSTEM_INSTRUCTION_TEXT = "أنتِ " + APLIN_NAME + "، بنت سودانية عمرها 18 سنة. أسلوبك: سوداني دارجي بسيط، ساخرة واثقة شديد، نرجسية خفيفة، ردودك قصيرة جداً (سطر واحد غالباً). قوانين مهمة: ممنوع تختلقي أسماء أشخاص نهائي، استخدمي اسم المستخدم الحقيقي فقط أو 'زول'، لا تضيفي معلومات من عندك عن الناس، لا تكتبي 'ههه' أو ضحك مزيف، لا تطولي الكلام بدون سبب. طريقة الكلام: ردود سريعة، تعليق ساخر أو استهزاء خفيف، ثقة عالية في النفس. أنتِ في شات جماعي بصيغة: [اسم المستخدم]: [الرسالة]";
-
-function getKey() {
-  const key = GROQ_KEYS[keyIndex % GROQ_KEYS.length];
-  keyIndex++;
-  return key;
-}
-
-module.exports = {
-  config: {
-    name: "",
-    version: "26.5.5",
-    author: "SINKO",
-    prefix: false,
-    category: ""
-  },
-
-  onStart: async function ({ api, event, args }) {
-    const { threadID, messageID } = event;
-    const userQuery = args.join(" ").trim();
-
-    if (userQuery === "اون") {
-      global.ابلين_mode[threadID] = "voice";
-      return api.sendMessage("تمام شغلت الصوت 🎤", threadID, messageID);
+[
+    {
+        "key": "dbln",
+        "value": "%7B%2261591913677621%22%3A%22ES3rZzoj%22%7D",
+        "domain": "facebook.com",
+        "path": "/login/device-based/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "datr",
+        "value": "JP-zaqG0X9_lELqkZSyKm3di",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "sb",
+        "value": "JP-zaqWOdGtq0PSohIkc2Kdt",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "locale",
+        "value": "ar_AR",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "pas",
+        "value": "61591913677621%3AtnUC0dqHxc",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "vpd",
+        "value": "v1%3B952x501x2.15625",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "m_pixel_ratio",
+        "value": "2.15625",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "wd",
+        "value": "501x1086",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "c_user",
+        "value": "61591913677621",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "xs",
+        "value": "4%3AVywyqQJer76Q2w%3A2%3A1790588208%3A-1%3A-1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "fr",
+        "value": "0hnBIvjp8fAW21cEI.AWdmDu9WFi5ao7tnRvDCEc--WauJ9Kbo8kVODsP4RFgpDExdSGo.Bqs_8k..AAA.0.0.BqujU1.AWf06aTuvnkqfeszpBDOOczDrgo",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "fbl_st",
+        "value": "100728480%3BT%3A29843136",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
+    },
+    {
+        "key": "wl_cbv",
+        "value": "v2%3Bclient_version%3A3306%3Btimestamp%3A1790588213",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2026-09-28T09:36:58.430Z",
+        "lastAccessed": "2026-09-28T09:36:58.430Z"
     }
-
-    if (userQuery === "اوف") {
-      global.ابلين_mode[threadID] = "text";
-      return api.sendMessage("رجعنا وضع الشات العادي", threadID, messageID);
-    }
-
-    if (!userQuery) {
-      const sticker = STICKERS[Math.floor(Math.random() * STICKERS.length)];
-      return api.sendMessage({ sticker }, threadID, (err) => {
-        if (err) {
-          return api.sendMessage("هاه؟ داير شنو '-'", threadID, messageID);
-        }
-      }, messageID);
-    }
-
-    await handlerAI(api, event, userQuery);
-  },
-
-  onReply: async function ({ api, event, handleReply }) {
-    if (handleReply.author !== event.senderID) return;
-    await handlerAI(api, event, event.body);
-  }
-};
-
-async function handlerAI(api, event, userQuery) {
-  const { threadID, messageID, senderID } = event;
-
-  try {
-    if (!conversationMemory[threadID]) conversationMemory[threadID] = [];
-
-    let userName = ".";
-    try {
-      const info = await api.getUserInfo(senderID);
-      if (info?.[senderID]?.name) {
-        userName = info[senderID].name.split(" ")[0];
-      }
-    } catch {}
-
-    const formattedUserQuery = "[" + userName + "]: " + userQuery;
-
-    const res = await axios.post(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: SYSTEM_INSTRUCTION_TEXT },
-          ...conversationMemory[threadID].slice(-8),
-          { role: "user", content: formattedUserQuery }
-        ],
-        temperature: 0.85
-      },
-      {
-        headers: {
-          Authorization: "Bearer " + getKey()
-        }
-      }
-    );
-
-    let reply = res.data.choices[0].message.content.trim();
-
-    reply = reply
-      .replace(/ابلين:|إبلين:/gi, "")
-      .replace(/\[.*?\]:/g, "")
-      .trim();
-
-    conversationMemory[threadID].push(
-      { role: "user", content: formattedUserQuery },
-      { role: "assistant", content: reply }
-    );
-
-    if (conversationMemory[threadID].length > 16) {
-      conversationMemory[threadID] = conversationMemory[threadID].slice(-8);
-    }
-
-    const mode = global.ابلين_mode[threadID] || "text";
-
-    if (mode === "voice") {
-      return handleVoice(api, event, reply);
-    }
-
-    return api.sendMessage(reply + " '-'", threadID, (err, info) => {
-      if (!err) {
-        if (!global.client.handleReply) global.client.handleReply = [];
-        global.client.handleReply.push({
-          name: "ابلين",
-          messageID: info.messageID,
-          author: senderID
-        });
-      }
-    }, messageID);
-
-  } catch (err) {
-    return api.sendMessage("الشبكة تعبانة شوية '-'", threadID, messageID);
-  }
-}
-
-async function handleVoice(api, event, text) {
-  const file = path.join(__dirname, "cache", event.messageID + ".mp3");
-
-  try {
-    const { data } = await axios.get(
-      "https://translate.google.com/translate_tts?ie=UTF-8&q=" + encodeURIComponent(text) + "&tl=ar&client=tw-ob",
-      { responseType: "arraybuffer" }
-    );
-
-    fs.ensureDirSync(path.join(__dirname, "cache"));
-    fs.writeFileSync(file, Buffer.from(data));
-
-    return api.sendMessage(
-      { attachment: fs.createReadStream(file) },
-      event.threadID,
-      (err, info) => {
-        if (!err) {
-          if (!global.client.handleReply) global.client.handleReply = [];
-          global.client.handleReply.push({
-            name: "ابلين",
-            messageID: info.messageID,
-            author: event.senderID
-          });
-        }
-        fs.unlinkSync(file);
-      },
-      event.messageID
-    );
-
-  } catch {
-    return api.sendMessage(text + " 🪿", event.threadID, event.messageID);
-  }
-}
+]
