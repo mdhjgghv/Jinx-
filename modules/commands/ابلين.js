@@ -17,24 +17,29 @@ const STICKERS = [
 
 const APLIN_NAME = 'ابلين';
 
-/* 🔥 شخصية سودانية محسّنة متفاعلة كالبشر */
+/* 🔥 شخصية سودانية محسّنة */
 const SYSTEM_INSTRUCTION_TEXT = `
 أنتِ ${APLIN_NAME}، بنت سودانية عمرها 18 سنة.
-أنتِ قاعدة في شات جماعي وبتتكلمي طبيعي زي البشر. لو زول وجه ليك كلام أو سألك حتى لو ما عمل رد (Reply)، ردي عليهو طوالي وبأسلوب تفاعلي.
 
-أسلوبك وطريقتك:
-- سوداني دارجي بسيط وعفوي شديد.
-- ساخرة، واثقة في نفسك شديد، ونرجسية خفيفة (بتحسي نفسك أذكى من الكل).
-- ردودك قصيرة جداً ومباشرة (سطر واحد غالباً)، وبتتفاعلي مع الكلام بذكاء كأنك قاعدة قدامهم.
+أسلوبك:
+- سوداني دارجي بسيط
+- ساخره واثقة شديد
+- نرجسية خفيفة (بتحسي نفسك أذكى من الكل لكن بدون مبالغة)
+- ردودك قصيرة جداً (سطر واحد غالباً)
 
-قوانين صارمة:
-- ممنوع تختلقي أسماء أشخاص نهائي.
-- استخدمي اسم المستخدم الحقيقي فقط الموجود في بداية رسالته أو "زول".
-- لا تضيفي معلومات من عندك عن الناس.
-- لا تكتبي "ههه" أو ضحك مزيف نهائياً.
-- لا تطولي الكلام بدون سبب.
+قوانين مهمة:
+- ممنوع تختلقي أسماء أشخاص نهائي
+- استخدمي اسم المستخدم الحقيقي فقط أو "زول"
+- لا تضيفي معلومات من عندك عن الناس
+- لا تكتبي "ههه" أو ضحك مزيف
+- لا تطولي الكلام بدون سبب
 
-أنتِ في شات جماعي وتستقبلي الرسائل بصيغة:
+طريقة الكلام:
+- ردود سريعة
+- تعليق ساخر أو استهزاء خفيف
+- ثقة عالية في النفس
+
+أنتِ في شات جماعي بصيغة:
 [اسم المستخدم]: [الرسالة]
 `;
 
@@ -46,11 +51,11 @@ function getKey() {
 
 module.exports = {
   config: {
-    name: "ابلين",
-    version: "26.6.0",
+    name: "",
+    version: "26.5.0",
     author: "SINKO",
     prefix: false,
-    category: "AI"
+    category: ""
   },
 
   onStart: async function ({ api, event, args }) {
@@ -75,22 +80,6 @@ module.exports = {
     await handlerAI(api, event, userQuery);
   },
 
-  onChat: async function ({ api, event }) {
-    const { threadID, messageID, body, senderID } = event;
-    if (!body) return;
-
-    // لتجنب تداخل الأوامر لو الرسالة تبدأ ببريفكس أو خاصة بأشياء تاني (لو عندك بريفكس للبوت)
-    // هنا البوت هيشوف لو الرسالة موجهة ليهو أو فيها اسمه أو محادثة عامة في الشات الجماعي
-    const lowerBody = body.toLowerCase();
-    const isReplyToBot = event.messageReply && event.messageReply.senderID === api.getCurrentUserID();
-    const isMentioned = lowerBody.includes("ابلين") || lowerBody.includes("ابلينا") || lowerBody.includes("يبنت");
-
-    // لو رسالة عادية في الشات وما موجهة ليها ولا رداً عليها، ممكن تتجاهلها عشان ما تزعج الناس، إلا لو حابب ترد على كله شيل الشرط دا.
-    if (!isReplyToBot && !isMentioned) return;
-
-    await handlerAI(api, event, body);
-  },
-
   onReply: async function ({ api, event, handleReply }) {
     if (handleReply.author !== event.senderID) return;
     await handlerAI(api, event, event.body);
@@ -104,7 +93,7 @@ async function handlerAI(api, event, userQuery) {
     if (!conversationMemory[threadID]) conversationMemory[threadID] = [];
 
     /* 🔒 اسم المستخدم الحقيقي فقط */
-    let userName = "زول";
+    let userName = ".";
     try {
       const info = await api.getUserInfo(senderID);
       if (info?.[senderID]?.name) {
@@ -155,19 +144,8 @@ async function handlerAI(api, event, userQuery) {
       return handleVoice(api, event, reply);
     }
 
-    // تفاعل تلقائي بإيموجي مناسب للرسالة بناءً على نص كلام الشخص أو محتوى الرد
-    try {
-      let reactionEmoji = "🗿"; // افتراضي ساخر
-      const q = userQuery.toLowerCase();
-      if (q.includes("هههه") || q.includes("حلو") || q.includes("ضحك")) reactionEmoji = "😂";
-      else if (q.includes("كيف") || q.includes("ليه") || q.includes("شنو")) reactionEmoji = "🤨";
-      else if (q.includes("بحبك") || q.includes("قلب")) reactionEmoji = "🙄";
-      else if (q.includes("زعلان") || q.includes("اوف")) reactionEmoji = "🥱";
-      
-      api.setMessageReaction(reactionEmoji, messageID, (err) => {}, true);
-    } catch (e) {}
-
-    return api.sendMessage(`${reply}`, threadID, (err, info) => {
+    // تعديل الربولي لضمان استمرارية المحادثة
+    return api.sendMessage(`${reply} '-'`, threadID, (err, info) => {
       if (!err) {
         if (!global.client.handleReply) global.client.handleReply = [];
         global.client.handleReply.push({
