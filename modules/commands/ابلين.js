@@ -1,3 +1,4 @@
+const { GoogleGenAI } = require("@google/genai");
 const axios = require('axios');
 const fs = require('fs-extra');
 const path = require('path');
@@ -38,13 +39,43 @@ const SYSTEM_INSTRUCTION_TEXT = `
 [اسم المستخدم]: [الرسالة]
 `;
 
+async function askGemini(apiKey, prompt, history = []) {
+  const ai = new GoogleGenAI({ apiKey });
+  
+  const formattedHistory = history.map(h => ({
+    role: h.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: h.content }]
+  }));
+
+  const chat = ai.models.chats.create({
+    model: "gemini-2.5-flash",
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION_TEXT,
+      temperature: 0.85,
+      maxOutputTokens: 1000
+    },
+    history: formattedHistory
+  });
+
+  const result = await chat.sendMessage({ message: prompt });
+  const text = result?.text?.trim();
+
+  if (!text) {
+    throw new Error("Gemini returned empty response");
+  }
+
+  return text;
+}
+
 module.exports = {
   config: {
-    name: "",
-    version: "26.5.0",
+    name: "ابلين",
+    version: "28.0.0",
     author: "SINKO",
+    hasPermssion: 0,
     prefix: false,
-    category: ""
+    category: "الذكاء الاصطناعي",
+    usages: "ابلين [سؤالك]"
   },
 
   onStart: async function ({ api, event, args }) {
@@ -79,10 +110,9 @@ async function handlerAI(api, event, userQuery) {
   const { threadID, messageID, senderID } = event;
 
   try {
-    if (!conversationMemory[senderID]) conversationMemory[senderID] = [{ role: "system", content: SYSTEM_INSTRUCTION_TEXT }];
+    if (!conversationMemory[threadID]) conversationMemory[threadID] = [];
 
-    /* 🔒 اسم المستخدم الحقيقي فقط */
-    let userName = ".";
+    let userName = "زول";
     try {
       const info = await api.getUserInfo(senderID);
       if (info?.[senderID]?.name) {
@@ -91,63 +121,45 @@ async function handlerAI(api, event, userQuery) {
     } catch {}
 
     const formattedUserQuery = `[${userName}]: ${userQuery}`;
-    const history = conversationMemory[senderID];
 
-    history.push({
-      role: "user",
-      content: formattedUserQuery
-    });
+    try {
+      await api.setMessageReaction("⏳", messageID, threadID);
+    } catch {}
 
-    if (history.length > 20) {
-      history.splice(1, history.length - 20);
+    // استخدام مفتاح Gemini من البيئة (Environment Variables)
+    const googleKey = process.env.GEMINI_API_KEY;
+    if (!googleKey) {
+      return api.sendMessage("يا زول مفتاح الـ GEMINI_API_KEY ما محطوط في الـ Environment Variables!", threadID, messageID);
     }
 
-    const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2);
-
-    let formData = "";
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chat_style"\r\n\r\nchat\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="chatHistory"\r\n\r\n${JSON.stringify(history)}\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="model"\r\n\r\nstandard\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="hacker_is_stinky"\r\n\r\nvery_stinky\r\n`;
-    formData += `--${boundary}\r\n`;
-    formData += `Content-Disposition: form-data; name="enabled_tools"\r\n\r\n[]\r\n`;
-    formData += `--${boundary}--\r\n`;
-
-    const response = await axios({
-      method: "POST",
-      url: "https://api.deepai.org/hacking_is_a_serious_crime",
-      headers: {
-        "content-type": `multipart/form-data; boundary=${boundary}`,
-        origin: "https://deepai.org",
-        "user-agent": "Mozilla/5.0"
-      },
-      data: formData
-    });
-
-    let reply = "";
-    if (response.data) {
-      if (typeof response.data === "string") reply = response.data;
-      else if (response.data.output) reply = response.data.output;
-      else if (response.data.text) reply = response.data.text;
+    let reply = null;
+    try {
+      reply = await askGemini(googleKey, formattedUserQuery, conversationMemory[threadID].slice(-8));
+    } catch (err) {
+      console.error(`[APLIN ERROR]: ${err.message}`);
     }
 
+    if (!reply) {
+      try { await api.setMessageReaction("⚠️", messageID, threadID); } catch {}
+      return api.sendMessage("الشبكة تعبانة شوية ولا الخدمة قفلت '-'", threadID, messageID);
+    }
+
+    /* 🔥 منع ظهور اسم البوت أو التكرار */
     reply = reply
-      .replace(/\\n/g, "\n")
-      .replace(/\\"/g, '"')
       .replace(/ابلين:|إبلين:/gi, "")
       .replace(/\[.*?\]:/g, "")
       .trim();
 
-    if (!reply) reply = "دا أقصى فهمي للسؤال دا '-'";
+    conversationMemory[threadID].push(
+      { role: "user", content: formattedUserQuery },
+      { role: "assistant", content: reply }
+    );
 
-    history.push({
-      role: "assistant",
-      content: reply
-    });
+    if (conversationMemory[threadID].length > 16) {
+      conversationMemory[threadID] = conversationMemory[threadID].slice(-8);
+    }
+
+    try { await api.setMessageReaction("🤖", messageID, threadID); } catch {}
 
     const mode = global.ابلين_mode[threadID] || "text";
 
@@ -167,7 +179,7 @@ async function handlerAI(api, event, userQuery) {
     }, messageID);
 
   } catch (err) {
-    return api.sendMessage("الشبكة تعبانة شوية '-'", threadID, messageID);
+    return api.sendMessage("حاصل خطأ يا زول '-'", threadID, messageID);
   }
 }
 
@@ -195,7 +207,7 @@ async function handleVoice(api, event, text) {
             author: event.senderID
           });
         }
-        fs.unlinkSync(file);
+        try { fs.unlinkSync(file); } catch {}
       },
       event.messageID
     );
