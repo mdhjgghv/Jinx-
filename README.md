@@ -58,13 +58,13 @@ npm install
 
 ```json
 {
-  "botName": "ابلين",
-  "prefix": "!",
+  "botName": "Jinx",
+  "prefix": ".",
   "botpicture": "https://i.ibb.co/Xxmdjjfm/Flux-Dev-cinematic-keyframe13-anime-keyframe12-Animestyle-port-2.jpg",
-  "ownerName": "61586897962846",
-  "ownerUID": "61586897962846",
+  "ownerName": "61595619269502",
+  "ownerUID": "61595619269502",
   "adminUIDs": [
-    "61586897962846"
+    "61595619269502"
   ]
 }
 ```
@@ -102,7 +102,7 @@ module.exports = {
   config: {
     name: 'hello',
     version: '1.0',
-    author: '61586897962846',
+    author: '61595619269502',
     countDown: 5,
     prefix: true,
     adminOnly: false,
@@ -128,7 +128,7 @@ module.exports = {
   config: {
     name: 'admincmd',
     version: '1.0',
-    author: '61586897962846',
+    author: '61595619269502',
     countDown: 5,
     prefix: true,
     adminOnly: true,
@@ -154,7 +154,7 @@ module.exports = {
   config: {
     name: 'noprefix',
     version: '1.0',
-    author: '61586897962846',
+    author: '61595619269502',
     countDown: 5,
     prefix: false,
     adminOnly: false,
@@ -181,7 +181,7 @@ module.exports.run = async ({ api, event }) => {
 module.exports.config = {
     name: "groupadmin",
     version: "1.0",
-    author: "61586897962846",
+    author: "61595619269502",
     countDown: 5,
     prefix: true,
     groupAdminOnly: true,
@@ -198,7 +198,7 @@ module.exports.run = async ({ api, event }) => {
 
 ## الدعم والتواصل
 
-- **المطور**: 61586897962846  
+- **المطور**:61586897962846  
   - **فيسبوك**: [اضغط هنا](https://www.facebook.com/profile.php?id=61586897962846)  
 - **البريد الإلكتروني**: [bgmohammedhridoy@gmail.com](mailto:bgmohammedhridoy@gmail.com)  
 - **Messenger**: [للتواصل](https://m.me/j/AbZ7V4ubIwFomn8x/)  
